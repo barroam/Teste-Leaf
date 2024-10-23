@@ -1,0 +1,153 @@
+
+
+  <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attrape les Étoiles</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">Informations du demandeurs</h2>
+        
+        <ul class="nav nav-pills nav-justified mb-4 gap-2">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Informations</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Éligibilité</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Ressources</a>
+          </li>
+        </ul>
+      
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Quel est votre statut pour cette activité ?</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="status" id="individual" checked>
+              <label class="form-check-label" for="individual">
+                Individuel
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="status" id="group">
+              <label class="form-check-label" for="group">
+                Groupes
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="status" id="association">
+              <label class="form-check-label" for="association">
+                Associations
+              </label>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="name" class="form-label">Nom du demandeur</label>
+            <input type="text" class="form-control" id="name">
+          </div>
+          <div class="mb-3">
+            <label for="address" class="form-label">Adresse</label>
+            <input type="text" class="form-control" id="address">
+          </div>
+          <div class="mb-3">
+            <label for="cnni" class="form-label">CNNI/NCEA</label>
+            <input type="text" class="form-control" id="cnni">
+          </div>
+          <div class="mb-3">
+            <label for="contact" class="form-label">Contact</label>
+            <input type="text" class="form-control" id="contact">
+          </div>
+          <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary">Précédent</button>
+            <button type="submit" class="btn btn-success">Suivant</button>
+          </div>
+        </form>
+      </div>
+      <div class="container mt-4">
+        <h2 class="mb-4">Contrôle d'éligibilité</h2>
+        
+        <ul class="nav nav-pills nav-justified mb-4 gap-2">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Informations</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Éligibilité</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link border" href="#">Ressources</a>
+          </li>
+        </ul>
+      
+        <form>
+          <div class="mb-3">
+            <label for="parcelNumber" class="form-label">Numéro du parcelle</label>
+            <input type="text" class="form-control" id="parcelNumber">
+          </div>
+          <div class="mb-3">
+            <label for="area" class="form-label">Superficie en m2</label>
+            <input type="number" class="form-control" id="area">
+          </div>
+          <div class="mb-3">
+            <label for="cultureType" class="form-label">Type de culture</label>
+            <input type="text" class="form-control" id="cultureType">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Avez vous acces à l'eau ?</label>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="waterAccess" id="waterYes" checked>
+              <label class="form-check-label" for="waterYes">
+                OUI
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="waterAccess" id="waterNo">
+              <label class="form-check-label" for="waterNo">
+                NON
+              </label>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary">Précédent</button>
+            <button type="submit" class="btn btn-success">Suivant</button>
+          </div>
+        </form>
+      </div>
+      <div class="container mt-4">
+        <h2 class="mb-4">Ressources</h2>
+        
+        <ul class="nav nav-pills nav-justified mb-4 gap-2">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Informations</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Éligibilité</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="#">Ressources</a>
+          </li>
+        </ul>
+      
+        <div class="list-group">
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Semences
+            <button class="btn btn-success">Ajouter</button>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Engrais
+            <button class="btn btn-success">Ajouter</button>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Equipements
+            <button class="btn btn-success">Ajouter</button>
+          </div>
+        </div>
+      </div>
+
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <title>Géstu Mbay - Plateforme de Collaboration Agricole</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        .section-hero {
+            background-color: #c4c2c2;
+            padding: 50px 0;
+            border-bottom: 1px solid #ccc;
+        }
+        .hero-text h1 {
+            font-size: 2.5rem;
+            color: #2e8b57;
+        }
+        .hero-image {
+            background-size: cover;
+            background-position: center;
+            height: 400px;
+        }
+        .bg-light {
+            background-color: #ffffff;
+        }
+        .text-success {
+            color: #2e8b57;
+        }
+        .footer {
+            background-color: #e3f2fd;
+            color: #333;
+            padding: 20px 0;
+            border-top: 1px solid #ccc;
+        }
+        .icon {
+            font-size: 1.5rem;
+            color: #2e8b57;
+            margin-right: 10px;
+        }
+        .btn-outline-custom {
+            border-color: #2e8b57;
+            color: #2e8b57;
+        }
+        .btn-solid-custom {
+            background-color: #2e8b57;
+            color: white;
+        }
+        .btn-solid-custom:hover,
+        .btn-outline-custom:hover {
+            opacity: 0.8;
+        }
+        .feature-section {
+            background-image: url('https://www.example.com/path-to-background.jpg');
+            background-size: cover;
+            background-position: center;
+            padding: 60px 0;
+            color: white;
+        }
+        .process-section {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .process-text {
+            flex: 1;
+            margin-right: 20px;
+        }
+        .process-image {
+            flex: 1;
+            max-width: 50%;
+        }
+        .process-image img {
+            width: 100%;
+            border-radius: 15px;
+        }
+        .card-custom {
+            transition: transform 0.3s ease-in-out;
+        }
+        .card-custom:hover {
+            transform: translateY(-10px);
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Introduction -->
+<section class="section-hero">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 hero-text">
+                <h1>Bienvenue sur Géstu Mbay</h1>
+                <p>Notre plateforme offre aux agriculteurs un espace de collaboration pour améliorer leurs pratiques agricoles. Ensemble, cultivons un avenir meilleur.</p>
+                <a href="#" class="btn btn-solid-custom">Commencer Maintenant</a>
+            </div>
+            <div class="col-md-6 hero-image" style="background-image: url('https://img.freepik.com/photos-gratuite/agriculture-intelligente-5-0-produit-vegetal-vert-technologie-agricole-arriere-plan-publication-medias-sociaux_53876-96918.jpg?semt=ais_hybrid');"></div>
+        </div>
+    </div>
+</section>
+
+<!-- Processus de Demande avec Image -->
+<section class="py-5">
+    <div class="container process-section">
+        <div class="process-text">
+            <h3 class="text-success">Comment ça fonctionne ?</h3>
+            <p>Notre processus de demande de ressources est simple et transparent. Découvrez les étapes :</p>
+            <ol class="list-group">
+                <li class="list-group-item"><i class="icon fas fa-info-circle"></i> Soumettez votre demande d'informations.</li>
+                <li class="list-group-item"><i class="icon fas fa-check-circle"></i> Contrôle d'éligibilité pour accéder aux ressources.</li>
+                <li class="list-group-item"><i class="icon fas fa-seedling"></i> Sélectionnez vos ressources : semences, équipements, engrais.</li>
+            </ol>
+        </div>
+        <div class="process-image">
+            <img src="https://img.freepik.com/photos-gratuite/ferme-maraichere-biologique-usine-plantes-maraicheres-hydroponiques_35913-2605.jpg?semt=ais_hybrid" alt="Processus">
+        </div>
+    </div>
+</section>
+
+<!-- Fonctionnalités avec Cartes -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h3 class="text-success text-center mb-4">Fonctionnalités d'Accompagnement</h3>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card card-custom">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="icon fas fa-briefcase"></i> Gestion des contrats</h5>
+                        <p class="card-text">Accédez à une gestion simplifiée des contrats avec vos partenaires agricoles.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="icon fas fa-chart-line"></i> Suivi de projet</h5>
+                        <p class="card-text">Suivez l'avancement de vos projets en temps réel pour une gestion optimisée.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card card-custom">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="icon fas fa-handshake"></i> Collaboration efficace</h5>
+                        <p class="card-text">Collaborez de manière efficace pour un partenariat gagnant-gagnant.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="container text-center">
+        <p>© 2024 Géstu Mbay - Tous droits réservés.</p>
+        <div>
+            <a href="#" class="text-dark mx-2"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" class="text-dark mx-2"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="text-dark mx-2"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="text-dark mx-2"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

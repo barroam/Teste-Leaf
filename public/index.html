@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Analyzer</title>
+</head>
+<body>
+  <h1>Upload Images for Analysis</h1>
+  <form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="images" multiple />
+    <button type="submit">Analyze Images</button>
+  </form>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      try {
+        const response = await fetch('http://localhost:3000/analyze', { // Assurez-vous que l'URL est correcte
+          method: 'POST',
+          body: formData
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Result:', result);
+        alert('Analysis complete. Check the console for results.');
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred during the analysis.');
+      }
+    });
+  </script>
+</body>
+</html>

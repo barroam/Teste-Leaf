@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carte Leaflet avec Gestion des Zones</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #sidebar {
+      padding: 10px;
+      background-color: #f4f4f4;
+      border-right: 1px solid #ddd;
+      box-sizing: border-box;
+      width: 300px;
+      height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    #map-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    #map {
+      flex: 1;
+    }
+    #details-container {
+      height: 30%;
+      padding: 10px;
+      background-color: #f4f4f4;
+      border-top: 1px solid #ddd;
+      overflow-y: auto;
+    }
+    .alert-item {
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: #fff;
+    }
+    .search {
+      margin-bottom: 20px;
+    }
+    .search input {
+      width: calc(100% - 60px);
+      padding: 5px;
+    }
+    .search button {
+      padding: 5px 10px;
+    }
+    #popup-container {
+      display: none;
+      position: fixed;
+      top: 20%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #fff;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+    }
+    #popup-container button {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebar">
+    <h1>Gestion des Zones</h1>
+    <div class="search">
+      <input type="text" id="searchInput" placeholder="Rechercher une zone...">
+      <button onclick="searchAlerts()">Rechercher</button>
+    </div>
+    <div id="alertList">
+      <!-- Liste des zones -->
+    </div>
+  </div>
+  <div id="map-container">
+    <div id="map"></div>
+    <div id="search-map" style="padding: 10px;">
+      <input type="text" id="mapSearchInput" placeholder="Rechercher sur la carte...">
+      <button onclick="searchOnMap()">Rechercher</button>
+    </div>
+  </div>
+  <div id="details-container">
+    <h2 id="details-title">Sélectionnez une zone</h2>
+    <p id="details-description">Description : Non définie</p>
+    <p id="details-comments">Commentaires : Non définis</p>
+    <textarea id="commentInput" placeholder="Ajouter un commentaire..."></textarea>
+    <button onclick="addComment()">Ajouter Commentaire</button>
+  </div>
+
+  <!-- Pop-up HTML -->
+  <div id="popup-container">
+    <div id="popup-content">
+      <p id="popup-message"></p>
+      <button id="popup-confirm-btn">Confirmer</button>
+      <button id="popup-cancel-btn">Annuler</button>
+    </div>
+  </div>
+
+  <!-- Include Leaflet and other necessary libraries -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+  <script>
+    var map = L.map('map').setView([51.505, -0.09], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var circles = [];
+    var drawnItems = new L.FeatureGroup().addTo(map);
+    var selectedAlert = null;
+    var currentDrawingLayer = null;
+
+    var drawControl = new L.Control.Draw({
+      edit: {
+        featureGroup: drawnItems
+      }
+    }).addTo(map);
+
+    map.on(L.Draw.Event.CREATED, function(e) {
+      var layer = e.layer;
+      drawnItems.addLayer(layer);
+
+      var type = e.layerType;
+      var title = prompt("Entrez le titre de la zone:");
+      var description = prompt("Entrez la description de la zone:");
+      var zoneType = prompt("Entrez le type de zone (alerte, point d'eau, zone de turbulence, autre):");
+
+      if (title === null || title.trim() === '' || description === null || description.trim() === '' || zoneType === null || zoneType.trim() === '') {
+        alert("Les champs titre, description et type ne peuvent pas être vides. Zone non ajoutée.");
+        drawnItems.removeLayer(layer);
+        return;
+      }
+
+      var zoneData = {
+        layer: layer,
+        title: title,
+        description: description,
+        zoneType: zoneType,
+        comments: []
+      };
+
+      circles.push(zoneData);
+
+      layer.bindPopup(`
+        <b>${title}</b><br>
+        Type: ${zoneType}<br>
+        <button onclick="prepareRemoval(${layer._leaflet_id}); return false;">Supprimer</button>
+        <button onclick="prepareEdit(${layer._leaflet_id}); return false;">Modifier</button>
+      `).openPopup();
+
+      updateAlertList();
+      alert("Zone ajoutée avec succès !");
+    });
+
+    function showPopup(message, onConfirm, onCancel) {
+      var popupContainer = document.getElementById('popup-container');
+      var popupMessage = document.getElementById('popup-message');
+      var confirmButton = document.getElementById('popup-confirm-btn');
+      var cancelButton = document.getElementById('popup-cancel-btn');
+
+      popupMessage.textContent = message;
+      popupContainer.style.display = 'block';
+
+      confirmButton.onclick = function() {
+        popupContainer.style.display = 'none';
+        if (onConfirm) onConfirm();
+      };
+
+      cancelButton.onclick = function() {
+        popupContainer.style.display = 'none';
+        if (onCancel) onCancel();
+      };
+    }
+
+    function prepareRemoval(layerId) {
+      var item = circles.find(c => c.layer._leaflet_id === layerId);
+      if (!item) return;
+
+      var title = item.title;
+      showPopup(`Confirmez-vous la suppression de la zone "${title}" ?`, function() {
+        removeZone(layerId);
+      });
+    }
+
+    function removeZone(layerId) {
+      var item = circles.find(c => c.layer._leaflet_id === layerId);
+      if (item) {
+        drawnItems.removeLayer(item.layer);
+        circles = circles.filter(c => c.layer._leaflet_id !== layerId);
+        updateAlertList();
+        resetDetails();
+        alert("Zone supprimée avec succès.");
+      }
+    }
+
+    function prepareEdit(layerId) {
+      var item = circles.find(c => c.layer._leaflet_id === layerId);
+      if (!item) return;
+
+      selectedAlert = item;
+
+      document.getElementById('details-title').textContent = item.title;
+      document.getElementById('details-description').textContent = `Description : ${item.description}`;
+      document.getElementById('details-comments').textContent = `Commentaires : ${item.comments.join('; ')}`;
+    }
+
+    function addComment() {
+      if (!selectedAlert) return;
+      var comment = document.getElementById('commentInput').value.trim();
+      if (comment) {
+        selectedAlert.comments.push(comment);
+        document.getElementById('details-comments').textContent = `Commentaires : ${selectedAlert.comments.join('; ')}`;
+        document.getElementById('commentInput').value = '';
+      }
+    }
+
+    function searchAlerts() {
+      var searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      var alertItems = document.querySelectorAll('#alertList .alert-item');
+      alertItems.forEach(item => {
+        var title = item.querySelector('.alert-title').textContent.toLowerCase();
+        if (title.includes(searchTerm)) {
+          item.style.display = '';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    }
+
+    function searchOnMap() {
+      var searchTerm = document.getElementById('mapSearchInput').value.toLowerCase();
+      circles.forEach(circle => {
+        if (circle.title.toLowerCase().includes(searchTerm)) {
+          map.fitBounds(circle.layer.getBounds());
+          circle.layer.openPopup();
+        }
+      });
+    }
+
+    function updateAlertList() {
+      var alertList = document.getElementById('alertList');
+      alertList.innerHTML = '';
+      circles.forEach((alertData) => {
+        var alertItem = document.createElement('div');
+        alertItem.className = 'alert-item';
+        alertItem.innerHTML = `
+          <strong class="alert-title">${alertData.title}</strong><br>
+          Type: ${alertData.zoneType}<br>
+          <button onclick="showDetails(${alertData.layer._leaflet_id}); return false;">Détails</button>
+        `;
+        alertList.appendChild(alertItem);
+      });
+    }
+
+    function showDetails(layerId) {
+      var item = circles.find(c => c.layer._leaflet_id === layerId);
+      if (item) {
+        document.getElementById('details-title').textContent = item.title;
+        document.getElementById('details-description').textContent = `Description : ${item.description}`;
+        document.getElementById('details-comments').textContent = `Commentaires : ${item.comments.join('; ')}`;
+        document.getElementById('commentInput').value = '';
+        selectedAlert = item;
+      }
+    }
+
+    function resetDetails() {
+      document.getElementById('details-title').textContent = 'Sélectionnez une zone';
+      document.getElementById('details-description').textContent = 'Description : Non définie';
+      document.getElementById('details-comments').textContent = 'Commentaires : Non définis';
+      document.getElementById('commentInput').value = '';
+      selectedAlert = null;
+    }
+  </script>
+</body>
+</html>

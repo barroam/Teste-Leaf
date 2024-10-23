@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Carte, Météo et Sol</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f4f6f9;
+        }
+        #map {
+            height: 50vh;
+            width: 100%;
+        }
+        #dashboard {
+            display: flex;
+            flex-direction: row;
+            padding: 20px;
+            background: #ffffff;
+            border-top: 2px solid #e9ecef;
+            height: 50vh;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        }
+        #weather-data, #soil-data {
+            flex: 1;
+            margin-left: 20px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #weather-data h2, #soil-data h2 {
+            margin-top: 0;
+            color: #2e8b57;
+        }
+        #weather-data p, #soil-data p {
+            font-size: 1.2em;
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+        }
+        #weather-data p img, #soil-data p img {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #2e8b57;">Tableau de Bord Carte, Météo et Sol</h1>
+    <div id="map"></div>
+    <div id="dashboard">
+        <div id="weather-data">
+            <h2>Données Météorologiques</h2>
+            <p id="temperature"><img src="https://img.icons8.com/color/48/000000/thermometer.png" alt="Température"> Température : N/A</p>
+            <p id="feels_like"><img src="https://img.icons8.com/color/48/000000/warm.png" alt="Ressentie"> Ressentie : N/A</p>
+            <p id="humidity"><img src="https://img.icons8.com/color/48/000000/humidity.png" alt="Humidité"> Humidité : N/A</p>
+            <p id="wind_speed"><img src="https://img.icons8.com/color/48/000000/wind.png" alt="Vent"> Vitesse du vent : N/A</p>
+            <p id="sunrise"><img src="https://img.icons8.com/color/48/000000/sunrise.png" alt="Lever du soleil"> Lever du soleil : N/A</p>
+            <p id="sunset"><img src="https://img.icons8.com/color/48/000000/sunset.png" alt="Coucher du soleil"> Coucher du soleil : N/A</p>
+            <p id="description"><img src="https://img.icons8.com/color/48/000000/cloud.png" alt="Description"> Description : N/A</p>
+        </div>
+        <div id="soil-data">
+            <h2>Caractéristiques du Sol</h2>
+            <p id="soil-texture"><img src="https://img.icons8.com/color/48/000000/soil.png" alt="Texture du Sol"> Texture : N/A</p>
+            <p id="soil-ph"><img src="https://img.icons8.com/color/48/000000/ph.png" alt="pH du Sol"> pH : N/A</p>
+            <p id="soil-organic"><img src="https://img.icons8.com/color/48/000000/organic-food.png" alt="Carbone Organique"> Carbone Organique : N/A</p>
+        </div>
+    </div>
+
+    <script>
+        const OPENWEATHER_API_KEY = '57319f8379c1d0a0e9a7763406810ad5'; // Remplacez ceci par votre propre clé API
+        const AGROMONITORING_API_KEY = '57319f8379c1d0a0e9a7763406810ad5'; // Remplacez ceci par votre propre clé API
+        const FIELD_COORDINATES = [
+            [-17.173436, 14.741547],
+            [-17.173259, 14.741403],
+            [-17.173403, 14.741267],
+            [-17.173436, 14.741547]
+        ];
+
+        const FIELD_CENTER = FIELD_COORDINATES.reduce((acc, curr) => [acc[0] + curr[0], acc[1] + curr[1]])
+            .map(sum => sum / FIELD_COORDINATES.length);
+
+        const map = L.map('map').setView(FIELD_CENTER, 18);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        L.polygon(FIELD_COORDINATES, {color: 'red'}).addTo(map);
+
+        async function getWeatherData() {
+            const url = `https://api.openweathermap.org/data/2.5/weather?lat=${FIELD_CENTER[1]}&lon=${FIELD_CENTER[0]}&units=metric&appid=${OPENWEATHER_API_KEY}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ! Statut : ${response.status}`);
+                }
+                const data = await response.json();
+                displayWeatherData(data);
+            } catch (error) {
+                document.getElementById('weather-data').innerHTML += `<p>Erreur : ${error.message}</p>`;
+            }
+        }
+
+        function displayWeatherData(data) {
+            const sunriseTime = new Date(data.sys.sunrise * 1000).toLocaleTimeString('fr-FR');
+            const sunsetTime = new Date(data.sys.sunset * 1000).toLocaleTimeString('fr-FR');
+            
+            document.getElementById('temperature').textContent = `Température : ${data.main.temp}°C`;
+            document.getElementById('feels_like').textContent = `Ressentie : ${data.main.feels_like}°C`;
+            document.getElementById('humidity').textContent = `Humidité : ${data.main.humidity}%`;
+            document.getElementById('wind_speed').textContent = `Vitesse du vent : ${data.wind.speed} m/s`;
+            document.getElementById('sunrise').textContent = `Lever du soleil : ${sunriseTime}`;
+            document.getElementById('sunset').textContent = `Coucher du soleil : ${sunsetTime}`;
+            document.getElementById('description').textContent = `Description : ${data.weather[0].description}`;
+        }
+
+        async function getSoilData() {
+            const url = `http://api.agromonitoring.com/agro/1.0/soil?lon=${FIELD_CENTER[0]}&lat=${FIELD_CENTER[1]}&appid=${AGROMONITORING_API_KEY}`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Erreur HTTP ! Statut : ${response.status}`);
+                }
+                const data = await response.json();
+                displaySoilData(data);
+            } catch (error) {
+                document.getElementById('soil-data').innerHTML += `<p>Erreur : ${error.message}</p>`;
+            }
+        }
+
+        function displaySoilData(data) {
+            // Ajustez en fonction de la structure des données retournées par l'API AgroMonitoring
+            const texture = data.texture ? data.texture : 'Inconnue';
+            const ph = data.ph ? data.ph : 'Inconnu';
+            const organicCarbon = data.organicCarbon ? data.organicCarbon : 'Inconnu';
+
+            document.getElementById('soil-texture').textContent = `Texture : ${texture}`;
+            document.getElementById('soil-ph').textContent = `pH : ${ph}`;
+            document.getElementById('soil-organic').textContent = `Carbone Organique : ${organicCarbon} g/kg`;
+        }
+
+        getWeatherData();
+        getSoilData();
+    </script>
+</body>
+</html>

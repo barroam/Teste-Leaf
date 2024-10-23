@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Localisation par coordonnées</title>
+    <!-- Feuille de style Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        /* Style de la carte */
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .form-container {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Localisation par coordonnées</h1>
+    
+    <div class="form-container">
+        <label for="latitude">Latitude : </label>
+        <input type="number" id="latitude" step="any" placeholder="Entrez la latitude" required>
+        <label for="longitude">Longitude : </label>
+        <input type="number" id="longitude" step="any" placeholder="Entrez la longitude" required>
+        <button onclick="localiserAvecCoordonnees()">Localiser</button>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Script Leaflet -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // Initialisation de la carte centrée sur Dakar (par défaut)
+        var map = L.map('map').setView([14.6928, -17.4467], 13);  // Dakar, Sénégal
+
+        // Ajout des tuiles OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Marqueur par défaut sur Dakar
+        var marker = L.marker([14.6928, -17.4467]).addTo(map);
+        marker.bindPopup("<b>Position par défaut</b><br>Dakar, Sénégal").openPopup();
+
+        // Fonction pour localiser avec les coordonnées saisies
+        function localiserAvecCoordonnees() {
+            var lat = document.getElementById('latitude').value;
+            var lng = document.getElementById('longitude').value;
+
+            if (lat && lng) {
+                lat = parseFloat(lat);
+                lng = parseFloat(lng);
+
+                // Centrer la carte sur les coordonnées fournies
+                map.setView([lat, lng], 13);
+
+                // Supprimer l'ancien marqueur et en ajouter un nouveau
+                if (marker) {
+                    map.removeLayer(marker);
+                }
+                marker = L.marker([lat, lng]).addTo(map);
+                marker.bindPopup("<b>Coordonnées :</b><br>Latitude : " + lat + "<br>Longitude : " + lng).openPopup();
+            } else {
+                alert("Veuillez entrer des valeurs valides pour la latitude et la longitude.");
+            }
+        }
+    </script>
+</body>
+</html>

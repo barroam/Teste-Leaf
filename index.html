@@ -1,0 +1,32 @@
+graph TD
+    A[Établissement de l'accord] --> B{Évaluation des risques}
+    B --> |Risques identifiés| C[Plan de mitigation]
+    B --> |Pas de risques majeurs| D[Mise en œuvre de l'accord]
+    C --> D
+    D --> E{Suivi régulier}
+    E --> |Problème détecté| F[Analyse du problème]
+    E --> |Pas de problème| G[Poursuite de l'accord]
+    F --> H{Gravité du problème}
+    H --> |Mineur| I[Ajustement rapide]
+    H --> |Majeur| J[Réunion des parties]
+    I --> K[Documentation]
+    J --> L[Négociation]
+    L --> M{Résolution trouvée?}
+    M --> |Oui| N[Mise à jour de l'accord]
+    M --> |Non| O[Médiation externe]
+    N --> P[Implémentation des changements]
+    O --> Q{Résolution par médiation?}
+    Q --> |Oui| N
+    Q --> |Non| R[Recours aux clauses de sortie]
+    P --> E
+    K --> E
+
+    style A fill:#85C1E9,stroke:#333,stroke-width:2px
+    style B fill:#F9E79F,stroke:#333,stroke-width:2px
+    style D fill:#ABEBC6,stroke:#333,stroke-width:2px
+    style E fill:#F9E79F,stroke:#333,stroke-width:2px
+    style F fill:#F5B7B1,stroke:#333,stroke-width:2px
+    style J fill:#D7BDE2,stroke:#333,stroke-width:2px
+    style N fill:#ABEBC6,stroke:#333,stroke-width:2px
+    style O fill:#F5B7B1,stroke:#333,stroke-width:2px
+    style R fill:#EC7063,stroke:#333,stroke-width:2px
