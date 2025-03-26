@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Zones et Localisation</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #f0f4f8;
+        }
+        #sidebar {
+            padding: 20px;
+            background-color: #ffffff;
+            border-right: 1px solid #ccc;
+            width: 300px;
+            height: 100%;
+            overflow-y: auto;
+        }
+        #map-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #map {
+            flex: 1;
+        }
+        #details-container {
+            height: 30% ;
+            padding: 20px;
+            background-color: #ffffff;
+            border-top: 1px solid #ccc;
+            overflow-y: auto;
+        }
+        .search {
+            margin-bottom: 20px;
+        }
+        .search input, #commentInput {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #0056b3;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #004494;
+        }
+        .search-results {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: calc(100% - 40px);
+            z-index: 1000;
+            display: none;
+            margin-top: 5px;
+        }
+        .search-result-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .search-result-item:hover {
+            background-color: #f0f0f0;
+        }
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .comment-box {
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        .comment-date {
+            font-size: 0.8em;
+            color: #666;
+        }
+        .alert-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+        #popup-container {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebar">
+        <h1>Gestion des Zones</h1>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Rechercher une zone...">
+            <div id="searchResults" class="search-results"></div>
+            <button onclick="searchZones()">Rechercher les zones</button>
+        </div>
+        <div id="alertList">
+            <!-- Liste des zones -->
+        </div>
+    </div>
+    
+    <div id="map-container">
+        <div id="map"></div>
+        <div class="search-container" style="padding: 10px;">
+            <input type="text" id="mapSearchInput" placeholder="Rechercher une ville...">
+            <div id="mapSearchResults" class="search-results"></div>
+            <button onclick="searchOnMap()">Rechercher sur la carte</button>
+        </div>
+    </div>
+    
+    <div id="details-container">
+        <h2 id="details-title">Sélectionnez une zone</h2>
+        <p id="details-description">Description : Non définie</p>
+        <div id="details-comments">Commentaires : Aucun commentaire</div>
+        <textarea id="commentInput" placeholder="Ajouter un commentaire..."></textarea>
+        <button onclick="addComment()">Ajouter Commentaire</button>
+    </div>
+
+    <div id="popup-container">
+        <div id="popup-content">
+            <p id="popup-message"></p>
+            <button id="popup-confirm-btn">Confirmer</button>
+            <button id="popup-cancel-btn">Annuler</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+    <script>
+        // Variables globales
+        var map = L.map('map').setView([14.6928, -17.4467], 13);
+        var drawnItems = new L.FeatureGroup();
+        var selectedAlert = null;
+        var circles = [];
+        var locationComments = {};
+        var selectedLocation = null;
+
+        // Initialisation de la carte
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        drawnItems.addTo(map);
+
+        // Configuration des outils de dessin
+        var drawControl = new L.Control.Draw({
+            draw: {
+                marker: false,
+                polyline: false,
+                circlemarker: false,
+                circle: true,
+                polygon: true,
+                rectangle: true
+            },
+            edit: {
+                featureGroup: drawnItems
+            }
+        }).addTo(map);
+
+        // Gestionnaire d'événements pour le dessin
+        map.on(L.Draw.Event.CREATED, function(e) {
+            var layer = e.layer;
+            drawnItems.addLayer(layer);
+
+            var title = prompt("Entrez le titre de la zone:");
+            var description = prompt("Entrez la description de la zone:");
+
+            if (title && description) {
+                layer.bindPopup(`
+                    <b>${title}</b><br>
+                    ${description}<br>
+                    <button onclick="removeZone(${layer._leaflet_id})">Supprimer</button>
+                `).openPopup();
+                
+                circles.push({
+                    layer: layer,
+                    title: title,
+                    description: description,
+                    comments: []
+                });
+                
+                updateAlertList();
+            } else {
+                drawnItems.removeLayer(layer);
+                alert("Titre et description sont requis.");
+            }
+        });
+
+        // Fonction de recherche de ville
+        async function searchCity(query) {
+            if (query.length < 3) return [];
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Erreur de recherche:', error);
+                return [];
+            }
+        }
+
+        // Gestionnaire de recherche sur la carte
+        document.getElementById('mapSearchInput').addEventListener('input', async function(e) {
+            const query = e.target.value;
+            if (query.length < 3) return;
+
+            const results = await searchCity(query);
+            const resultsContainer = document.getElementById('mapSearchResults');
+            resultsContainer.innerHTML = '';
+            resultsContainer.style.display = results.length ? 'block' : 'none';
+
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = 'search-result-item';
+                div.textContent = result.display_name;
+                div.onclick = () => {
+                    const lat = parseFloat(result.lat);
+                    const lng = parseFloat(result.lon);
+                    map.setView([lat, lng], 13);
+                    
+                    selectedLocation = {
+                        lat: lat,
+                        lng: lng,
+                        name: result.display_name
+                    };
+
+                    document.getElementById('details-title').textContent = result.display_name;
+                    const locationId = `${lat}-${lng}`;
+                    updateCommentsDisplay(locationId);
+                    
+                    resultsContainer.style.display = 'none';
+                    document.getElementById('mapSearchInput').value = result.display_name;
+                };
+                resultsContainer.appendChild(div);
+            });
+        });
+
+        // Fonction de recherche des zones
+        function searchZones() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            circles.forEach(circle => {
+                const isVisible = circle.title.toLowerCase().includes(searchTerm);
+                circle.layer.getElement().style.display = isVisible ? '' : 'none';
+            });
+            updateAlertList();
+        }
+
+        // Fonction de mise à jour de la liste des alertes
+        function updateAlertList() {
+            const alertList = document.getElementById('alertList');
+            alertList.innerHTML = '';
+            
+            circles.forEach(circle => {
+                const alertItem = document.createElement('div');
+                alertItem.className = 'alert-item';
+                alertItem.innerHTML = `
+                    <strong class="alert-title">${circle.title}</strong>
+                    <p>${circle.description}</p>
+                    <button onclick="showDetails('${circle.layer._leaflet_id}')">Voir détails</button>
+                `;
+                alertList.appendChild(alertItem);
+            });
+        }
+
+        // Fonction d'affichage des détails
+        function showDetails(layerId) {
+            selectedAlert = circles.find(c => c.layer._leaflet_id === layerId);
+            if (selectedAlert) {
+                document.getElementById('details-title').textContent = selectedAlert.title;
+                document.getElementById('details-description').textContent = `Description : ${selectedAlert.description}`;
+                updateCommentsDisplay(layerId);
+                map.fitBounds(selectedAlert.layer.getBounds());
+            }
+        }
+
+        // Fonction de suppression de zone
+        function removeZone(layerId) {
+            const confirmation = confirm("Voulez-vous vraiment supprimer cette zone ?");
+            if (confirmation) {
+                const index = circles.findIndex(c => c.layer._leaflet_id === layerId);
+                if (index !== -1) {
+                    drawnItems.removeLayer(circles[index].layer);
+                    circles.splice(index, 1);
+                    updateAlertList();
+                }
+            }
+        }
+
+        // Fonction d'ajout de commentaire
+        function addComment() {
+            const commentText = document.getElementById('commentInput').value.trim();
+            if (!commentText) {
+                alert("Veuillez entrer un commentaire");
+                return;
+            }
+
+            if (!selectedLocation && !selectedAlert) {
+                alert("Veuillez d'abord sélectionner un emplacement ou une zone");
+                return;
+            }
+
+            const locationId = selectedAlert ? 
+                selectedAlert.layer._leaflet_id : 
+                `${selectedLocation.lat}-${selectedLocation.lng}`;
+
+            if (!locationComments[locationId]) {
+                locationComments[locationId] = [];
+            }
+
+            const newComment = {
+                text: commentText,
+                date: new Date().toLocaleString(),
+                location: selectedAlert ? selectedAlert.title : selectedLocation.name
+            };
+
+            locationComments[locationId].push(newComment);
+            updateCommentsDisplay(locationId);
+            document.getElementById('commentInput').value = '';
+        }
+
+        // Fonction de mise à jour de l'affichage des commentaires
+        function updateCommentsDisplay(locationId) {
+            const commentsContainer = document.getElementById('details-comments');
+            const comments = locationComments[locationId] || [];
+            
+            if (comments.length === 0) {
+                commentsContainer.innerHTML = '<p>Aucun commentaire pour cet emplacement</p>';
+                return;
+            }
+
+            const commentsHTML = comments.map(comment => `
+                <div class="comment-box">
+                    <div class="comment-date">${comment.date}</div>
+                    <div class="comment-text">${comment.text}</div>
+                    <div class="comment-location">Lieu: ${comment.location}</div>
+                </div>
+            `).join('');
+
+            commentsContainer.innerHTML = `
+                <h3>Commentaires</h3>
+                ${commentsHTML}
+            `;
+        }
+
+        // Gestionnaire de clic sur la carte
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                .then(response => response.json())
+                .then(data => {
+                    selectedLocation = {
+                        lat: lat,
+                        lng: lng,
+                        name: data.display_name
+                    };
+                    selectedAlert = null;
+
+                    document.getElementById('details-title').textContent = data.display_name;
+                    const locationId = `${lat}-${lng}`;
+                    updateCommentsDisplay(locationId);
+                })
+                .catch(error => console.error('Erreur:', error));
+        });
+
+        // Initialisation
+        updateAlertList();
+    </script>
+</body>
+</html>

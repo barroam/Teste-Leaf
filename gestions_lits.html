@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Lits - Hôpital</title>
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --primary-light: #e3f2fd;
+            --secondary: #f5f5f5;
+            --text: #333333;
+            --danger: #f44336;
+            --success: #4caf50;
+            --warning: #ff9800;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #fff;
+            color: var(--text);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .header-actions button {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .stat-card {
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .beds-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .beds-table th, .beds-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .beds-table th {
+            font-weight: 500;
+            color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.occupied {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .status.available {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .status.maintenance {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            color: var(--primary);
+        }
+        
+        .action-btn.delete {
+            color: var(--danger);
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #ddd;
+            color: var(--text);
+        }
+        
+        /* Chart styling */
+        .chart-container {
+            height: 200px;
+            position: relative;
+        }
+        
+        .chart-bar {
+            position: absolute;
+            bottom: 0;
+            width: 60px;
+            background-color: var(--primary);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.3s ease;
+        }
+        
+        .chart-labels {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 10px;
+        }
+        
+        .chart-label {
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .chart-value {
+            position: absolute;
+            top: -20px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h1>Gestion des Lits - Hôpital</h1>
+            </div>
+            <div class="header-actions">
+                <button id="addBedBtn">+ Ajouter un lit</button>
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-title">
+                    <span>Statistiques d'occupation</span>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Taux d'occupation</h3>
+                        <div class="stat-value" id="occupancyRate">68%</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Lits disponibles</h3>
+                        <div class="stat-value" id="availableBeds">16</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Lits occupés</h3>
+                        <div class="stat-value" id="occupiedBeds">34</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>En maintenance</h3>
+                        <div class="stat-value" id="maintenanceBeds">5</div>
+                    </div>
+                </div>
+                
+                <div class="card-title" style="margin-top: 20px;">
+                    <span>Taux d'occupation hebdomadaire</span>
+                </div>
+                <div class="chart-container" id="weeklyChart">
+                    <!-- Chart bars will be added via JavaScript -->
+                </div>
+                <div class="chart-labels" id="chartLabels">
+                    <!-- Labels will be added via JavaScript -->
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">
+                    <span>Liste des lits</span>
+                    <div>
+                        <input type="text" id="searchBed" placeholder="Rechercher..." class="form-control" style="width: 200px; display: inline-block;">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="beds-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Numéro</th>
+                                <th>Service</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bedsTableBody">
+                            <!-- Table rows will be populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add/Edit Bed Modal -->
+    <div class="modal" id="bedModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Ajouter un lit</h2>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <form id="bedForm">
+                <input type="hidden" id="bedId">
+                <div class="form-group">
+                    <label for="bedNumber">Numéro du lit</label>
+                    <input type="text" id="bedNumber" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="bedService">Service</label>
+                    <select id="bedService" class="form-control" required>
+                        <option value="">Sélectionnez un service</option>
+                        <option value="Cardiologie">Cardiologie</option>
+                        <option value="Pédiatrie">Pédiatrie</option>
+                        <option value="Urgences">Urgences</option>
+                        <option value="Maternité">Maternité</option>
+                        <option value="Chirurgie">Chirurgie</option>
+                        <option value="Neurologie">Neurologie</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="bedStatus">Statut</label>
+                    <select id="bedStatus" class="form-control" required>
+                        <option value="available">Disponible</option>
+                        <option value="occupied">Occupé</option>
+                        <option value="maintenance">En maintenance</option>
+                    </select>
+                </div>
+                <div class="form-group" id="patientInfoGroup" style="display: none;">
+                    <label for="patientName">Nom du patient</label>
+                    <input type="text" id="patientName" class="form-control">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Confirm Delete Modal -->
+    <div class="modal" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirmation</h2>
+                <button class="close-btn" id="closeDeleteModal">&times;</button>
+            </div>
+            <p>Êtes-vous sûr de vouloir supprimer ce lit ?</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Annuler</button>
+                <button type="button" class="btn btn-primary" style="background-color: var(--danger);" id="confirmDeleteBtn">Supprimer</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data
+        let beds = [
+            { id: 1, number: "A101", service: "Cardiologie", status: "occupied", patient: "Jean Dupont" },
+            { id: 2, number: "A102", service: "Cardiologie", status: "available", patient: null },
+            { id: 3, number: "A103", service: "Cardiologie", status: "maintenance", patient: null },
+            { id: 4, number: "B201", service: "Pédiatrie", status: "occupied", patient: "Sophie Martin" },
+            { id: 5, number: "B202", service: "Pédiatrie", status: "occupied", patient: "Lucas Bernard" },
+            { id: 6, number: "C301", service: "Urgences", status: "available", patient: null },
+            { id: 7, number: "C302", service: "Urgences", status: "occupied", patient: "Marie Lambert" },
+            { id: 8, number: "D401", service: "Maternité", status: "occupied", patient: "Julie Petit" },
+            { id: 9, number: "D402", service: "Maternité", status: "available", patient: null },
+            { id: 10, number: "E501", service: "Chirurgie", status: "maintenance", patient: null }
+        ];
+        
+        // Week days for the chart
+        const weekDays = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+        const occupancyData = [62, 65, 70, 68, 72, 60, 58]; // Sample occupancy data in percentage
+        
+        // DOM elements
+        const bedTableBody = document.getElementById('bedsTableBody');
+        const addBedBtn = document.getElementById('addBedBtn');
+        const bedModal = document.getElementById('bedModal');
+        const deleteModal = document.getElementById('deleteModal');
+        const closeModal = document.getElementById('closeModal');
+        const closeDeleteModal = document.getElementById('closeDeleteModal');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const bedForm = document.getElementById('bedForm');
+        const modalTitle = document.getElementById('modalTitle');
+        const bedIdInput = document.getElementById('bedId');
+        const bedNumberInput = document.getElementById('bedNumber');
+        const bedServiceInput = document.getElementById('bedService');
+        const bedStatusInput = document.getElementById('bedStatus');
+        const patientNameInput = document.getElementById('patientName');
+        const patientInfoGroup = document.getElementById('patientInfoGroup');
+        const searchBedInput = document.getElementById('searchBed');
+        const weeklyChart = document.getElementById('weeklyChart');
+        const chartLabels = document.getElementById('chartLabels');
+        
+        // Statistics elements
+        const occupancyRateElement = document.getElementById('occupancyRate');
+        const availableBedsElement = document.getElementById('availableBeds');
+        const occupiedBedsElement = document.getElementById('occupiedBeds');
+        const maintenanceBedsElement = document.getElementById('maintenanceBeds');
+        
+        // Initialize the dashboard
+        function initDashboard() {
+            renderBedsTable();
+            updateStats();
+            renderWeeklyChart();
+            
+            // Event listeners
+            addBedBtn.addEventListener('click', openAddBedModal);
+            closeModal.addEventListener('click', closeBedModal);
+            cancelBtn.addEventListener('click', closeBedModal);
+            closeDeleteModal.addEventListener('click', closeConfirmDeleteModal);
+            cancelDeleteBtn.addEventListener('click', closeConfirmDeleteModal);
+            confirmDeleteBtn.addEventListener('click', deleteBed);
+            bedForm.addEventListener('submit', saveBed);
+            searchBedInput.addEventListener('input', filterBeds);
+            bedStatusInput.addEventListener('change', togglePatientInfo);
+        }
+        
+        // Render beds table
+        function renderBedsTable(filteredBeds = null) {
+            const bedsToRender = filteredBeds || beds;
+            bedTableBody.innerHTML = '';
+            
+            bedsToRender.forEach(bed => {
+                const row = document.createElement('tr');
+                
+                const statusClass = bed.status === 'available' ? 'available' : 
+                                    bed.status === 'occupied' ? 'occupied' : 'maintenance';
+                
+                const statusText = bed.status === 'available' ? 'Disponible' : 
+                                   bed.status === 'occupied' ? 'Occupé' : 'En maintenance';
+                
+                row.innerHTML = `
+                    <td>${bed.id}</td>
+                    <td>${bed.number}</td>
+                    <td>${bed.service}</td>
+                    <td><span class="status ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button class="action-btn edit" data-id="${bed.id}">Modifier</button>
+                        <button class="action-btn delete" data-id="${bed.id}">Supprimer</button>
+                    </td>
+                `;
+                
+                bedTableBody.appendChild(row);
+            });
+            
+            // Add event listeners for edit and delete buttons
+            document.querySelectorAll('.action-btn.edit').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const bedId = e.target.getAttribute('data-id');
+                    openEditBedModal(parseInt(bedId));
+                });
+            });
+            
+            document.querySelectorAll('.action-btn.delete').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const bedId = e.target.getAttribute('data-id');
+                    openConfirmDeleteModal(parseInt(bedId));
+                });
+            });
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const totalBeds = beds.length;
+            const occupiedCount = beds.filter(bed => bed.status === 'occupied').length;
+            const availableCount = beds.filter(bed => bed.status === 'available').length;
+            const maintenanceCount = beds.filter(bed => bed.status === 'maintenance').length;
+            
+            const occupancyRate = Math.round((occupiedCount / totalBeds) * 100);
+            
+            occupancyRateElement.textContent = occupancyRate + '%';
+            availableBedsElement.textContent = availableCount;
+            occupiedBedsElement.textContent = occupiedCount;
+            maintenanceBedsElement.textContent = maintenanceCount;
+        }
+        
+        // Render weekly occupancy chart
+        function renderWeeklyChart() {
+            weeklyChart.innerHTML = '';
+            chartLabels.innerHTML = '';
+            
+            const maxHeight = 180; // Maximum height for bars in pixels
+            
+            occupancyData.forEach((value, index) => {
+                const barHeight = (value / 100) * maxHeight;
+                const barLeft = (index * (100 / 7)) + '%';
+                
+                // Create bar
+                const bar = document.createElement('div');
+                bar.className = 'chart-bar';
+                bar.style.height = barHeight + 'px';
+                bar.style.left = `calc(${barLeft} - 30px)`;
+                
+                // Add value on top of bar
+                const valueLabel = document.createElement('div');
+                valueLabel.className = 'chart-value';
+                valueLabel.textContent = value + '%';
+                bar.appendChild(valueLabel);
+                
+                weeklyChart.appendChild(bar);
+                
+                // Add day label
+                const dayLabel = document.createElement('div');
+                dayLabel.className = 'chart-label';
+                dayLabel.textContent = weekDays[index];
+                dayLabel.style.width = (100 / 7) + '%';
+                chartLabels.appendChild(dayLabel);
+            });
+        }
+        
+        // Open add bed modal
+        function openAddBedModal() {
+            modalTitle.textContent = 'Ajouter un lit';
+            bedIdInput.value = '';
+            bedForm.reset();
+            bedModal.style.display = 'flex';
+            togglePatientInfo();
+        }
+        
+        // Open edit bed modal
+        function openEditBedModal(bedId) {
+            const bed = beds.find(b => b.id === bedId);
+            if (!bed) return;
+            
+            modalTitle.textContent = 'Modifier un lit';
+            bedIdInput.value = bed.id;
+            bedNumberInput.value = bed.number;
+            bedServiceInput.value = bed.service;
+            bedStatusInput.value = bed.status;
+            patientNameInput.value = bed.patient || '';
+            
+            togglePatientInfo();
+            bedModal.style.display = 'flex';
+        }
+        
+        // Close bed modal
+        function closeBedModal() {
+            bedModal.style.display = 'none';
+        }
+        
+        // Open confirm delete modal
+        function openConfirmDeleteModal(bedId) {
+            bedIdInput.value = bedId;
+            deleteModal.style.display = 'flex';
+        }
+        
+        // Close confirm delete modal
+        function closeConfirmDeleteModal() {
+            deleteModal.style.display = 'none';
+        }
+        
+        // Toggle patient info based on bed status
+        function togglePatientInfo() {
+            if (bedStatusInput.value === 'occupied') {
+                patientInfoGroup.style.display = 'block';
+                patientNameInput.required = true;
+            } else {
+                patientInfoGroup.style.display = 'none';
+                patientNameInput.required = false;
+            }
+        }
+        
+        // Save bed (add or update)
+        function saveBed(e) {
+            e.preventDefault();
+            
+            const bedId = bedIdInput.value;
+            const bedData = {
+                number: bedNumberInput.value,
+                service: bedServiceInput.value,
+                status: bedStatusInput.value,
+                patient: bedStatusInput.value === 'occupied' ? patientNameInput.value : null
+            };
+            
+            if (bedId) {
+                // Update existing bed
+                const index = beds.findIndex(b => b.id === parseInt(bedId));
+                if (index !== -1) {
+                    beds[index] = { ...beds[index], ...bedData };
+                }
+            } else {
+                // Add new bed
+                const newId = beds.length > 0 ? Math.max(...beds.map(b => b.id)) + 1 : 1;
+                beds.push({ id: newId, ...bedData });
+            }
+            
+            renderBedsTable();
+            updateStats();
+            closeBedModal();
+        }
+        
+        // Delete bed
+        function deleteBed() {
+            const bedId = parseInt(bedIdInput.value);
+            beds = beds.filter(b => b.id !== bedId);
+            
+            renderBedsTable();
+            updateStats();
+            closeConfirmDeleteModal();
+        }
+        
+        // Filter beds based on search input
+        function filterBeds() {
+            const searchTerm = searchBedInput.value.toLowerCase();
+            
+            if (!searchTerm) {
+                renderBedsTable();
+                return;
+            }
+            
+            const filteredBeds = beds.filter(bed => 
+                bed.number.toLowerCase().includes(searchTerm) ||
+                bed.service.toLowerCase().includes(searchTerm) ||
+                (bed.patient && bed.patient.toLowerCase().includes(searchTerm))
+            );
+            
+            renderBedsTable(filteredBeds);
+        }
+        
+        // Initialize the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+</html>

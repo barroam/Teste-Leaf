@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Ressources - Hôpital</title>
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --primary-light: #e3f2fd;
+            --secondary: #f5f5f5;
+            --text: #333333;
+            --danger: #f44336;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --priority-high: #f44336;
+            --priority-medium: #ff9800;
+            --priority-low: #4caf50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #fff;
+            color: var(--text);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .header-actions button {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .resources-table, .requests-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .resources-table th, .resources-table td,
+        .requests-table th, .requests-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .resources-table th, .requests-table th {
+            font-weight: 500;
+            color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+        .resources-table tbody tr:hover, .requests-table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status.approved {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .status.pending {
+            background-color: var(--warning);
+            color: white;
+        }
+
+        .status.rejected {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: white;
+        }
+
+        .priority.high {
+            background-color: var(--priority-high);
+        }
+
+        .priority.medium {
+            background-color: var(--priority-medium);
+        }
+
+        .priority.low {
+            background-color: var(--priority-low);
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            color: var(--primary);
+        }
+
+        .action-btn.delete {
+            color: var(--danger);
+        }
+
+        .action-btn.approve {
+            color: var(--success);
+        }
+
+        .action-btn.reject {
+            color: var(--danger);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #ddd;
+            color: var(--text);
+        }
+
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* Chart styling */
+        .chart-container {
+            height: 300px;
+            position: relative;
+            margin-top: 20px;
+        }
+
+        .resource-type-distribution {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .resource-type-item {
+            flex: 1;
+            min-width: 120px;
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .resource-type-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .resource-type-count {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .priority-distribution {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .priority-item {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+
+        .priority-item.high {
+            background-color: var(--priority-high);
+        }
+
+        .priority-item.medium {
+            background-color: var(--priority-medium);
+        }
+
+        .priority-item.low {
+            background-color: var(--priority-low);
+        }
+
+        .priority-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .priority-count {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 5px;
+            background-color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .priority-distribution {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="header-title">
+            <h1>Gestion des Ressources - Hôpital</h1>
+        </div>
+        <div class="header-actions">
+            <button id="addResourceBtn">+ Ajouter une ressource</button>
+            <button id="requestResourceBtn">+ Demander une ressource</button>
+        </div>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="resources">Inventaire des ressources</div>
+        <div class="tab" data-tab="requests">Demandes de ressources</div>
+        <div class="tab" data-tab="statistics">Statistiques</div>
+    </div>
+
+    <!-- Resources Tab Content -->
+    <div class="tab-content active" id="resources-content">
+        <div class="card">
+            <div class="card-title">
+                <span>Inventaire des ressources</span>
+                <div>
+                    <input type="text" id="searchResource" placeholder="Rechercher..." class="form-control" style="width: 200px; display: inline-block;">
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="resources-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Nom</th>
+                        <th>Quantité</th>
+                        <th>Seuil d'alerte</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="resourcesTableBody">
+                    <!-- Resources table rows will be populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Tab Content -->
+    <div class="tab-content" id="requests-content">
+        <div class="card">
+            <div class="card-title">
+                <span>Demandes de ressources</span>
+                <div>
+                    <input type="text" id="searchRequest" placeholder="Rechercher..." class="form-control" style="width: 200px; display: inline-block;">
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="requests-table">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ressource</th>
+                        <th>Demandé par</th>
+                        <th>Service</th>
+                        <th>Quantité</th>
+                        <th>Priorité</th>
+                        <th>Date de demande</th>
+                        <th>Délai</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="requestsTableBody">
+                    <!-- Requests table rows will be populated via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Tab Content -->
+    <div class="tab-content" id="statistics-content">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total des ressources</h3>
+                <div class="stat-value" id="totalResources">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Types de ressources</h3>
+                <div class="stat-value" id="resourceTypes">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Demandes en attente</h3>
+                <div class="stat-value" id="pendingRequests">0</div>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <div class="card-title">Répartition par type de ressource</div>
+                <div class="resource-type-distribution" id="resourceTypeDistribution">
+                    <!-- Resource type distribution will be populated via JavaScript -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Répartition des demandes par priorité</div>
+                <div class="priority-distribution">
+                    <div class="priority-item high">
+                        <div class="priority-name">24 heures</div>
+                        <div class="priority-count" id="highPriorityCount">0</div>
+                    </div>
+                    <div class="priority-item medium">
+                        <div class="priority-name">48 heures</div>
+                        <div class="priority-count" id="mediumPriorityCount">0</div>
+                    </div>
+                    <div class="priority-item low">
+                        <div class="priority-name">72 heures</div>
+                        <div class="priority-count" id="lowPriorityCount">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Resource Modal -->
+    <div class="modal" id="addResourceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Ajouter une ressource</h2>
+                <button class="close-btn" onclick="closeModal('addResourceModal')">&times;</button>
+            </div>
+            <form id="addResourceForm">
+                <div class="form-group">
+                    <label for="resourceType">Type</label>
+                    <input type="text" id="resourceType" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="resourceName">Nom</label>
+                    <input type="text" id="resourceName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="resourceQuantity">Quantité</label>
+                    <input type="number" id="resourceQuantity" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="resourceThreshold">Seuil d'alerte</label>
+                    <input type="number" id="resourceThreshold" class="form-control" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Ajouter</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('addResourceModal')">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Request Resource Modal -->
+    <div class="modal" id="requestResourceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Demander une ressource</h2>
+                <button class="close-btn" onclick="closeModal('requestResourceModal')">&times;</button>
+            </div>
+            <form id="requestResourceForm">
+                <div class="form-group">
+                    <label for="requestResourceName">Nom de la ressource</label>
+                    <input type="text" id="requestResourceName" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="requestQuantity">Quantité</label>
+                    <input type="number" id="requestQuantity" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="requestPriority">Priorité</label>
+                    <select id="requestPriority" class="form-control">
+                        <option value="high">Haute (24h)</option>
+                        <option value="medium">Moyenne (48h)</option>
+                        <option value="low">Basse (72h)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="requestRequester">Demandé par</label>
+                    <input type="text" id="requestRequester" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="requestDepartment">Service</label>
+                    <input type="text" id="requestDepartment" class="form-control" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Envoyer la demande</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('requestResourceModal')">Annuler</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- Data ---
+    let resources = [];
+    let requests = [];
+
+    // --- Utility Functions ---
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "flex";
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    function generateStatus(quantity, threshold) {
+        if (quantity <= threshold) {
+            return `<span class="status rejected">Critique</span>`;
+        } else {
+            return `<span class="status approved">Disponible</span>`;
+        }
+    }
+
+    // --- Event Listeners for Buttons ---
+    document.getElementById('addResourceBtn').addEventListener('click', () => openModal('addResourceModal'));
+    document.getElementById('requestResourceBtn').addEventListener('click', () => openModal('requestResourceModal'));
+
+    // --- Tab Management ---
+    const tabs = document.querySelectorAll(".tab");
+    const tabContents = document.querySelectorAll(".tab-content");
+
+    tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+            tabs.forEach(t => t.classList.remove("active"));
+            tabContents.forEach(content => content.classList.remove("active"));
+
+            tab.classList.add("active");
+            document.getElementById(`${tab.dataset.tab}-content`).classList.add("active");
+        });
+    });
+
+    // --- Form Handling ---
+    // Add Resource Form
+    document.getElementById('addResourceForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const type = document.getElementById('resourceType').value;
+        const name = document.getElementById('resourceName').value;
+        const quantity = parseInt(document.getElementById('resourceQuantity').value);
+        const threshold = parseInt(document.getElementById('resourceThreshold').value);
+
+        const newResource = {
+            id: resources.length + 1,
+            type: type,
+            name: name,
+            quantity: quantity,
+            threshold: threshold
+        };
+
+        resources.push(newResource);
+        closeModal('addResourceModal');
+        renderResourcesTable();
+        updateStatistics();
+        document.getElementById('addResourceForm').reset();
+    });
+
+    // Request Resource Form
+    document.getElementById('requestResourceForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById('requestResourceName').value;
+        const quantity = parseInt(document.getElementById('requestQuantity').value);
+        const priority = document.getElementById('requestPriority').value;
+        const requester = document.getElementById('requestRequester').value;
+        const department = document.getElementById('requestDepartment').value;
+
+        const newRequest = {
+            id: requests.length + 1,
+            resource: name,
+            quantity: quantity,
+            priority: priority,
+            requester: requester,
+            department: department,
+            date: new Date().toLocaleDateString(),
+            status: 'pending'
+        };
+
+        requests.push(newRequest);
+        closeModal('requestResourceModal');
+        renderRequestsTable();
+        updateStatistics();
+        document.getElementById('requestResourceForm').reset();
+    });
+
+    // --- Table Rendering ---
+    function renderResourcesTable() {
+        const tableBody = document.getElementById('resourcesTableBody');
+        tableBody.innerHTML = '';
+
+        resources.forEach(resource => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${resource.id}</td>
+                <td>${resource.type}</td>
+                <td>${resource.name}</td>
+                <td>${resource.quantity}</td>
+                <td>${resource.threshold}</td>
+                <td>${generateStatus(resource.quantity, resource.threshold)}</td>
+                <td>
+                    <button class="action-btn delete" onclick="deleteResource(${resource.id})">Supprimer</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function renderRequestsTable() {
+        const tableBody = document.getElementById('requestsTableBody');
+        tableBody.innerHTML = '';
+
+        requests.forEach(request => {
+            let priorityClass = '';
+            switch (request.priority) {
+                case 'high':
+                    priorityClass = 'high';
+                    break;
+                case 'medium':
+                    priorityClass = 'medium';
+                    break;
+                case 'low':
+                    priorityClass = 'low';
+                    break;
+                default:
+                    priorityClass = 'low';
+            }
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${request.id}</td>
+                <td>${request.resource}</td>
+                <td>${request.requester}</td>
+                <td>${request.department}</td>
+                <td>${request.quantity}</td>
+                <td><span class="priority ${priorityClass}">${request.priority}</span></td>
+                <td>${request.date}</td>
+                <td>${getDeadline(request.priority)}</td>
+                <td><span class="status pending">En attente</span></td>
+                <td>
+                    <button class="action-btn approve" onclick="approveRequest(${request.id})">Approuver</button>
+                    <button class="action-btn reject" onclick="rejectRequest(${request.id})">Rejeter</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    // --- Action Handling ---
+    function deleteResource(resourceId) {
+        resources = resources.filter(resource => resource.id !== resourceId);
+        renderResourcesTable();
+        updateStatistics();
+    }
+
+    function approveRequest(requestId) {
+        const request = requests.find(request => request.id === requestId);
+        if (request) {
+            request.status = 'approved';
+            renderRequestsTable();
+            updateStatistics();
+        }
+    }
+
+    function rejectRequest(requestId) {
+        const request = requests.find(request => request.id === requestId);
+        if (request) {
+            request.status = 'rejected';
+            renderRequestsTable();
+            updateStatistics();
+        }
+    }
+
+    // --- Statistics Update ---
+    function updateStatistics() {
+        document.getElementById('totalResources').innerText = resources.length;
+        document.getElementById('resourceTypes').innerText = new Set(resources.map(r => r.type)).size;
+        document.getElementById('pendingRequests').innerText = requests.filter(r => r.status === 'pending').length;
+
+        const highPriorityCount = requests.filter(r => r.priority === 'high').length;
+        const mediumPriorityCount = requests.filter(r => r.priority === 'medium').length;
+        const lowPriorityCount = requests.filter(r => r.priority === 'low').length;
+
+        document.getElementById('highPriorityCount').innerText = highPriorityCount;
+        document.getElementById('mediumPriorityCount').innerText = mediumPriorityCount;
+        document.getElementById('lowPriorityCount').innerText = lowPriorityCount;
+    }
+
+    // --- Helper Function to Determine Deadline ---
+    function getDeadline(priority) {
+        switch (priority) {
+            case 'high':
+                return '24 heures';
+            case 'medium':
+                return '48 heures';
+            case 'low':
+                return '72 heures';
+            default:
+                return '72 heures';
+        }
+    }
+
+    // --- Initial Render ---
+    renderResourcesTable();
+    renderRequestsTable();
+    updateStatistics();
+</script>
+</body>
+</html>

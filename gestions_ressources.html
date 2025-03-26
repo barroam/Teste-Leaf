@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Ressources - Hôpital</title>
+    <style>
+        :root {
+            --primary: #1e88e5;
+            --primary-light: #e3f2fd;
+            --secondary: #f5f5f5;
+            --text: #333333;
+            --danger: #f44336;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --priority-high: #f44336;
+            --priority-medium: #ff9800;
+            --priority-low: #4caf50;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #fff;
+            color: var(--text);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title h1 {
+            font-size: 24px;
+            font-weight: 500;
+        }
+        
+        .header-actions button {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        
+        .tab.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 5px;
+        }
+        
+        .stat-card .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .resources-table, .requests-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .resources-table th, .resources-table td,
+        .requests-table th, .requests-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .resources-table th, .requests-table th {
+            font-weight: 500;
+            color: var(--primary);
+            background-color: var(--primary-light);
+        }
+        
+        .resources-table tbody tr:hover, .requests-table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status.approved {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .status.pending {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .status.rejected {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .priority {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: white;
+        }
+        
+        .priority.high {
+            background-color: var(--priority-high);
+        }
+        
+        .priority.medium {
+            background-color: var(--priority-medium);
+        }
+        
+        .priority.low {
+            background-color: var(--priority-low);
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+            color: var(--primary);
+        }
+        
+        .action-btn.delete {
+            color: var(--danger);
+        }
+        
+        .action-btn.approve {
+            color: var(--success);
+        }
+        
+        .action-btn.reject {
+            color: var(--danger);
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text);
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #ddd;
+            color: var(--text);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        /* Chart styling */
+        .chart-container {
+            height: 300px;
+            position: relative;
+            margin-top: 20px;
+        }
+        
+        .resource-type-distribution {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .resource-type-item {
+            flex: 1;
+            min-width: 120px;
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .resource-type-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .resource-type-count {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .priority-distribution {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        
+        .priority-item {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+        
+        .priority-item.high {
+            background-color: var(--priority-high);
+        }
+        
+        .priority-item.medium {
+            background-color: var(--priority-medium);
+        }
+        
+        .priority-item.low {
+            background-color: var(--priority-low);
+        }
+        
+        .priority-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .priority-count {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #eee;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            border-radius: 5px;
+            background-color: var(--primary);
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .priority-distribution {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h1>Gestion des Ressources - Hôpital</h1>
+            </div>
+            <div class="header-actions">
+                <button id="addResourceBtn">+ Ajouter une ressource</button>
+                <button id="requestResourceBtn">+ Demander une ressource</button>
+            </div>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="resources">Inventaire des ressources</div>
+            <div class="tab" data-tab="requests">Demandes de ressources</div>
+            <div class="tab" data-tab="statistics">Statistiques</div>
+        </div>
+        
+        <!-- Resources Tab Content -->
+        <div class="tab-content active" id="resources-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>Inventaire des ressources</span>
+                    <div>
+                        <input type="text" id="searchResource" placeholder="Rechercher..." class="form-control" style="width: 200px; display: inline-block;">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="resources-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Nom</th>
+                                <th>Quantité</th>
+                                <th>Seuil d'alerte</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resourcesTableBody">
+                            <!-- Resources table rows will be populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Requests Tab Content -->
+        <div class="tab-content" id="requests-content">
+            <div class="card">
+                <div class="card-title">
+                    <span>Demandes de ressources</span>
+                    <div>
+                        <input type="text" id="searchRequest" placeholder="Rechercher..." class="form-control" style="width: 200px; display: inline-block;">
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="requests-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Ressource</th>
+                                <th>Demandé par</th>
+                                <th>Service</th>
+                                <th>Quantité</th>
+                                <th>Priorité</th>
+                                <th>Date de demande</th>
+                                <th>Délai</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody">
+                            <!-- Requests table rows will be populated via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics Tab Content -->
+        <div class="tab-content" id="statistics-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total des ressources</h3>
+                    <div class="stat-value" id="totalResources">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Types de ressources</h3>
+                    <div class="stat-value" id="resourceTypes">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Demandes en attente</h3>
+                    <div class="stat-value" id="pendingRequests">0</div>
+                </div>
+            </div>
+            
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-title">Répartition par type de ressource</div>
+                    <div class="resource-type-distribution" id="resourceTypeDistribution">
+                        <!-- Resource type distribution will be populated via JavaScript -->
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-title">Répartition des demandes par priorité</div>
+                    <div class="priority-distribution">
+                        <div class="priority-item high">
+                            <div class="priority-name">24 heures</div>
+                            <div class="priority-count" id="highPriorityCount">0</div>
+                        </div>
+                        <div class="priority-item medium">
+                            <div class="priority-name">48 heures</div>
+                            <div class="priority-count" id="mediumPriorityCount">0</div>
+                        </div>
+                        <div class="priority-item low">
+                            <div class="priority-name">72 heures</div>
+                            <div class="priority-count" id="lowPriorityCount">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title">Taux de satisfaction des demandes</div>
+                <div style="display: flex; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="margin-bottom: 5px;">Taux de satisfaction global</div>
+                        <div class="progress-bar">
+                            <div class="progress" id="satisfactionRate" style="width: 0%;"></div>
+                        </div>
+                        <div style="font-size: 14px; margin-top: 5px;"><span id="satisfactionPercentage">0</span>% de demandes traitées</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add/Edit Resource Modal -->
+        <div class="modal" id="resourceModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="resourceModalTitle">Ajouter une ressource</h2>
+                    <button class="close-btn" id="closeResourceModal">&times;</button>
+                </div>
+                <form id="resourceForm">
+                    <input type="hidden" id="resourceId">
+                    <div class="form-group">
+                        <label for="resourceType">Type de ressource</label>
+                        <select id="resourceType" class="form-control" required>
+                            <option value="">Sélectionnez un type</option>
+                            <option value="Médicament">Médicament</option>
+                            <option value="Équipement">Équipement</option>
+                            <option value="Consommable">Consommable</option>
+                            <option value="Matériel médical">Matériel médical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceName">Nom de la ressource</label>
+                        <input type="text" id="resourceName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceQuantity">Quantité disponible</label>
+                        <input type="number" id="resourceQuantity" min="0" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="resourceThreshold">Seuil d'alerte</label>
+                        <input type="number" id="resourceThreshold" min="0" class="form-control" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelResourceBtn">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Request Resource Modal -->
+        <div class="modal" id="requestModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="requestModalTitle">Demander une ressource</h2>
+                    <button class="close-btn" id="closeRequestModal">&times;</button>
+                </div>
+                <form id="requestForm">
+                    <input type="hidden" id="requestId">
+                    <div class="form-group">
+                        <label for="requestResourceId">Ressource</label>
+                        <select id="requestResourceId" class="form-control" required>
+                            <option value="">Sélectionnez une ressource</option>
+                            <!-- Options will be populated via JavaScript -->
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestRequester">Demandé par</label>
+                        <input type="text" id="requestRequester" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestService">Service</label>
+                        <select id="requestService" class="form-control" required>
+                            <option value="">Sélectionnez un service</option>
+                            <option value="Cardiologie">Cardiologie</option>
+                            <option value="Pédiatrie">Pédiatrie</option>
+                            <option value="Urgences">Urgences</option>
+                            <option value="Maternité">Maternité</option>
+                            <option value="Chirurgie">Chirurgie</option>
+                            <option value="Neurologie">Neurologie</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestQuantity">Quantité</label>
+                        <input type="number" id="requestQuantity" min="1" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="requestPriority">Priorité</label>
+                        <select id="requestPriority" class="form-control" required>
+                            <option value="high">Urgente (24 heures)</option>
+                            <option value="medium">Normale (48 heures)</option>
+                            <option value="low">Basse (72 heures)</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelRequestBtn">Annuler</button>
+                        <button type="submit" class="btn btn-primary">Soumettre</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Process Request Modal -->
+        <div class="modal" id="processRequestModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="processRequestModalTitle">Traiter la demande</h2>
+                    <button class="close-btn" id="closeProcessRequestModal">&times;</button>
+                </div>
+                <div id="processRequestInfo" style="margin-bottom: 15px;">
+                    <!-- Request details will be populated via JavaScript -->
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelProcessBtn">Annuler</button>
+                    <button type="button" class="btn btn-danger" id="rejectRequestBtn">Rejeter</button>
+                    <button type="button" class="btn btn-success" id="approveRequestBtn">Approuver</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Confirm Delete Modal -->
+        <div class="modal" id="deleteModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Confirmation</h2>
+                    <button class="close-btn" id="closeDeleteModal">&times;</button>
+                </div>
+                <p id="deleteModalText">Êtes-vous sûr de vouloir supprimer cette ressource ?</p>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">Annuler</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Supprimer</button>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+            // Sample data for resources
+            let resources = [
+                { id: 1, type: "Médicament", name: "Paracétamol 500mg", quantity: 1200, threshold: 300, status: "OK" },
+                { id: 2, type: "Médicament", name: "Ibuprofène 400mg", quantity: 800, threshold: 200, status: "OK" },
+                { id: 3, type: "Équipement", name: "Thermomètre frontal", quantity: 15, threshold: 5, status: "OK" },
+                { id: 4, type: "Consommable", name: "Seringues 10ml", quantity: 350, threshold: 100, status: "OK" },
+                { id: 5, type: "Matériel médical", name: "Masques chirurgicaux", quantity: 80, threshold: 100, status: "Alerte" },
+                { id: 6, type: "Consommable", name: "Gants d'examen (M)", quantity: 250, threshold: 100, status: "OK" },
+                { id: 7, type: "Médicament", name: "Amoxicilline 500mg", quantity: 90, threshold: 100, status: "Alerte" }
+            ];
+            
+            // Sample data for requests
+            let requests = [
+                { id: 1, resourceId: 1, resourceName: "Paracétamol 500mg", requester: "Dr. Martin", service: "Pédiatrie", quantity: 50, priority: "medium", date: "2025-02-26", status: "pending" },
+                { id: 2, resourceId: 4, resourceName: "Seringues 10ml", requester: "Dr. Dubois", service: "Urgences", quantity: 30, priority: "high", date: "2025-02-26", status: "approved" },
+                { id: 3, resourceId: 5, resourceName: "Masques chirurgicaux", requester: "Dr. Lefèvre", service: "Chirurgie", quantity: 20, priority: "high", date: "2025-02-25", status: "approved" },
+                { id: 4, resourceId: 2, resourceName: "Ibuprofène 400mg", requester: "Dr. Bernard", service: "Cardiologie", quantity: 40, priority: "low", date: "2025-02-24", status: "rejected" },
+                { id: 5, resourceId: 7, resourceName: "Amoxicilline 500mg", requester: "Dr. Petit", service: "Maternité", quantity: 15, priority: "medium", date: "2025-02-27", status: "pending" }
+            ];
+            
+            // DOM elements
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            const resourcesTableBody = document.getElementById('resourcesTableBody');
+            const requestsTableBody = document.getElementById('requestsTableBody');
+            
+            const addResourceBtn = document.getElementById('addResourceBtn');
+            const requestResourceBtn = document.getElementById('requestResourceBtn');
+            
+            const resourceModal = document.getElementById('resourceModal');
+            const closeResourceModal = document.getElementById('closeResourceModal');
+            const cancelResourceBtn = document.getElementById('cancelResourceBtn');
+            
+            const requestModal = document.getElementById('requestModal');
+            const closeRequestModal = document.getElementById('closeRequestModal');
+            const cancelRequestBtn = document.getElementById('cancelRequestBtn');
+            
+            const processRequestModal = document.getElementById('processRequestModal');
+            const closeProcessRequestModal = document.getElementById('closeProcessRequestModal');
+            const cancelProcessBtn = document.getElementById('cancelProcessBtn');
+            const approveRequestBtn = document.getElementById('approveRequestBtn');
+            const rejectRequestBtn = document.getElementById('rejectRequestBtn');
+            
+            const deleteModal = document.getElementById('deleteModal');
+            const closeDeleteModal = document.getElementById('closeDeleteModal');
+            const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+            const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+            const deleteModalText = document.getElementById('deleteModalText');
+            
+            const resourceForm = document.getElementById('resourceForm');
+            const requestForm = document.getElementById('requestForm');
+            
+            const searchResourceInput = document.getElementById('searchResource');
+            const searchRequestInput = document.getElementById('searchRequest');
+            
+            // Statistic elements
+            const totalResourcesElement = document.getElementById('totalResources');
+            const resourceTypesElement = document.getElementById('resourceTypes');
+            const pendingRequestsElement = document.getElementById('pendingRequests');
+            const highPriorityCountElement = document.getElementById('highPriorityCount');
+            const mediumPriorityCountElement = document.getElementById('mediumPriorityCount');
+            const lowPriorityCountElement = document.getElementById('lowPriorityCount');
+            const satisfactionRateElement = document.getElementById('satisfactionRate');
+            const satisfactionPercentageElement = document.getElementById('satisfactionPercentage');
+            
+            let deleteType = 'resource'; // 'resource' or 'request'
+            let itemToDeleteId = null;
+            let requestToProcessId = null;
+            
+            // Initialize the application
+            function initApp() {
+                renderResourcesTable();
+                renderRequestsTable();
+                updateStats();
+                
+                // Event listeners for tabs
+                tabs.forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        const tabId = tab.getAttribute('data-tab');
+                        activateTab(tabId);
+                    });
+                });
+                
+                // Event listeners for buttons
+                addResourceBtn.addEventListener('click', openAddResourceModal);
+                requestResourceBtn.addEventListener('click', openRequestResourceModal);
+                
+                closeResourceModal.addEventListener('click', closeResourceModalHandler);
+                cancelResourceBtn.addEventListener('click', closeResourceModalHandler);
+                
+                closeRequestModal.addEventListener('click', closeRequestModalHandler);
+                cancelRequestBtn.addEventListener('click', closeRequestModalHandler);
+                
+                closeProcessRequestModal.addEventListener('click', closeProcessRequestModalHandler);
+                cancelProcessBtn.addEventListener('click', closeProcessRequestModalHandler);
+                approveRequestBtn.addEventListener('click', approveRequest);
+                rejectRequestBtn.addEventListener('click', rejectRequest);
+                
+                closeDeleteModal.addEventListener('click', closeDeleteModalHandler);
+                cancelDeleteBtn.addEventListener('click', closeDeleteModalHandler);
+                confirmDeleteBtn.addEventListener('click', confirmDelete);
+                
+                resourceForm.addEventListener('submit', saveResource);
+                requestForm.addEventListener('submit', submitRequest);
+                
+                searchResourceInput.addEventListener('input', filterResources);
+                searchRequestInput.addEventListener('input', filterRequests);
+            }
+            
+            // Tab activation
+            function activateTab(tabId) {
+                tabs.forEach(tab => {
+                    if (tab.getAttribute('data-tab') === tabId) {
+                        tab.classList.add('active');
+                    } else {
+                        tab.classList.remove('active');
+                    }
+                });
+                
+                tabContents.forEach(content => {
+                    if (content.id === tabId + '-content') {
+                        content.classList.add('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Render resources table
+            function renderResourcesTable(filteredResources = null) {
+                const resourcesToRender = filteredResources || resources;
+                resourcesTableBody.innerHTML = '';  
+            };
+
+
+
+            // Render requests table
+            function renderRequestsTable(filteredRequests = null) {
+                const requestsToRender = filteredRequests || requests;
+                requestsTableBody.innerHTML = '';
+            }   
+
+            // Update statistics
+            function updateStats() {
+                totalResourcesElement.textContent = resources.length;
+                resourceTypesElement.textContent = [...new Set(resources.map(r => r.type))].length;
+                pendingRequestsElement.textContent = requests.filter(req => req.status === 'pending').length;
+                highPriorityCountElement.textContent = requests.filter(req => req.priority === 'high').length;
+                mediumPriorityCountElement.textContent = requests.filter(req => req.priority === 'medium').length;
+                lowPriorityCountElement.textContent = requests.filter(req => req.priority === 'low').length;
+            }
+    document.addEventListener("DOMContentLoaded", () => {
+        // Gestion des onglets
+        const tabs = document.querySelectorAll(".tab");
+        const tabContents = document.querySelectorAll(".tab-content");
+
+        tabs.forEach(tab => {
+            tab.addEventListener("click", () => {
+                tabs.forEach(t => t.classList.remove("active"));
+                tabContents.forEach(content => content.classList.remove("active"));
+
+                tab.classList.add("active");
+                document.getElementById(`${tab.dataset.tab}-content`).classList.add("active");
+            });
+        });
+
+        // Exemple de données fictives pour les ressources
+        const resources = [
+            { id: 1, type: "Médical", name: "Masques", quantity: 500, threshold: 100, status: "Disponible" },
+            { id: 2, type: "Pharmaceutique", name: "Antibiotiques", quantity: 200, threshold: 50, status: "Critique" }
+        ];
+
+        const requests = [
+            { id: 1, resource: "Masques", requester: "Dr. Dupont", department: "Urgences", quantity: 50, priority: "high", date: "2025-02-25", deadline: "24h", status: "En attente" },
+            { id: 2, resource: "Antibiotiques", requester: "Dr. Martin", department: "Pédiatrie", quantity: 20, priority: "medium", date: "2025-02-24", deadline: "48h", status: "Approuvé" }
+        ];
+
+        // Remplir le tableau des ressources
+        const resourcesTableBody = document.getElementById("resourcesTableBody");
+        function populateResourcesTable() {
+            resourcesTableBody.innerHTML = "";
+            resources.forEach(resource => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${resource.id}</td>
+                    <td>${resource.type}</td>
+                    <td>${resource.name}</td>
+                    <td>${resource.quantity}</td>
+                    <td>${resource.threshold}</td>
+                    <td><span class="status ${resource.status === 'Critique' ? 'rejected' : 'approved'}">${resource.status}</span></td>
+                    <td><button class="action-btn delete">Supprimer</button></td>
+                `;
+                resourcesTableBody.appendChild(row);
+            });
+        }
+
+        // Remplir le tableau des demandes
+        const requestsTableBody = document.getElementById("requestsTableBody");
+        function populateRequestsTable() {
+            requestsTableBody.innerHTML = "";
+            requests.forEach(request => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${request.id}</td>
+                    <td>${request.resource}</td>
+                    <td>${request.requester}</td>
+                    <td>${request.department}</td>
+                    <td>${request.quantity}</td>
+                    <td><span class="priority ${request.priority}">${request.priority === 'high' ? 'Haute' : request.priority === 'medium' ? 'Moyenne' : 'Basse'}</span></td>
+                    <td>${request.date}</td>
+                    <td>${request.deadline}</td>
+                    <td><span class="status ${request.status === 'En attente' ? 'pending' : request.status === 'Approuvé' ? 'approved' : 'rejected'}">${request.status}</span></td>
+                    <td><button class="action-btn approve">Approuver</button><button class="action-btn reject">Rejeter</button></td>
+                `;
+                requestsTableBody.appendChild(row);
+            });
+        }
+
+        // Statistiques dynamiques
+        function updateStatistics() {
+            document.getElementById("totalResources").textContent = resources.length;
+            document.getElementById("resourceTypes").textContent = [...new Set(resources.map(r => r.type))].length;
+            document.getElementById("pendingRequests").textContent = requests.filter(req => req.status === "En attente").length;
+
+            document.getElementById("highPriorityCount").textContent = requests.filter(req => req.priority === "high").length;
+            document.getElementById("mediumPriorityCount").textContent = requests.filter(req => req.priority === "medium").length;
+            document.getElementById("lowPriorityCount").textContent = requests.filter(req => req.priority === "low").length;
+        }
+
+        // Initialisation
+        populateResourcesTable();
+        populateRequestsTable();
+        updateStatistics();
+    });
+</script>

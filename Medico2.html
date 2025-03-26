@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tableau de Bord Hospitalier</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .search-bar {
+            max-width: 500px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 12px 40px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            background: #e3f2fd;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #1976d2;
+        }
+
+        .stat-info h3 {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .stat-info p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .service-header {
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #eee;
+        }
+
+        .service-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .service-content {
+            padding: 20px;
+        }
+
+        .room {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .room:last-child {
+            margin-bottom: 0;
+        }
+
+        .bed-status {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .bed {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .bed.available {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .bed.occupied {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .book-btn {
+            background: #4caf50;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .book-btn:hover {
+            background: #43a047;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .modal-buttons .cancel {
+            background: #f5f5f5;
+        }
+
+        .modal-buttons .confirm {
+            background: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Centre Hospitalier Saint-Marie</h1>
+            <p>Système de réservation de chambres</p>
+        </header>
+
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Rechercher un service...">
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-hospital"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>3</h3>
+                    <p>Services</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-bed"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>25</h3>
+                    <p>Lits disponibles</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>75%</h3>
+                    <p>Taux d'occupation</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-header">
+                    <i class="fas fa-heartbeat service-icon"></i>
+                    <span>Cardiologie</span>
+                </div>
+                <div class="service-content">
+                    <div class="room">
+                        <div class="room-header">
+                            <button class="book-btn">
+                                <i class="fas fa-calendar"></i>
+                                Réserver
+                            </button>
+                            <h3>Chambre 101</h3>
+                            <p>Standard</p>
+                        </div>
+                        <div class="bed-status">
+                            <span class="bed available">Lit 1</span>
+                            <span class="bed occupied">Lit 2</span>
+                            <span class="bed available">Lit 3</span>
+                        </div>
+                    </div>
+                    <div class="room">
+                        <div class="room-header">
+                            <button class="book-btn">
+                                <i class="fas fa-calendar"></i>
+                                Réserver
+                            </button>
+                            <h3>Chambre 102 - Soins Intensifs</h3>
+                            <p>Premium</p>
+                        </div>
+                        <div class="bed-status">
+                            <span class="bed available">Lit 1</span>
+                            <span class="bed available">Lit 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-header">
+                    <i class="fas fa-baby service-icon"></i>
+                    <span>Pédiatrie</span>
+                </div>
+                <div class="service-content">
+                    <div class="room">
+                        <div class="room-header">
+                            <button class="book-btn">
+                                <i class="fas fa-calendar"></i>
+                                Réserver
+                            </button>
+                            <h3>Chambre 201</h3>
+                            <p>Standard</p>
+                        </div>
+                        <div class="bed-status">
+                            <span class="bed available">Lit 1</span>
+                            <span class="bed available">Lit 2</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-header">
+                    <i class="fas fa-female service-icon"></i>
+                    <span>Maternité</span>
+                </div>
+                <div class="service-content">
+                    <div class="room">
+                        <div class="room-header">
+                            <button class="book-btn">
+                                <i class="fas fa-calendar"></i>
+                                Réserver
+                            </button>
+                            <h3>Suite Familiale</h3>
+                            <p>Premium</p>
+                        </div>
+                        <div class="bed-status">
+                            <span class="bed available">Lit 1</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="bookingModal">
+        <div class="modal-content">
+            <h2>Réserver une chambre</h2>
+            <form>
+                <div class="form-group">
+                    <label>Date d'arrivée</label>
+                    <input type="date">
+                </div>
+                <div class="form-group">
+                    <label>Durée du séjour</label>
+                    <select>
+                        <option>1 jour</option>
+                        <option>2 jours</option>
+                        <option>3 jours</option>
+                        <option>4 jours</option>
+                        <option>5 jours</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Type de lit</label>
+                    <select>
+                        <option>Lit standard - 150€/jour</option>
+                        <option>Lit premium - 250€/jour</option>
+                    </select>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="cancel">Annuler</button>
+                    <button type="submit" class="confirm">Confirmer la réservation</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Simple modal toggle
+        const bookButtons = document.querySelectorAll('.book-btn');
+        const modal = document.querySelector('.modal');
+        const cancelButton = document.querySelector('.cancel');
+
+        bookButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.style.display = 'flex';
+            });
+        });
+
+        cancelButton.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

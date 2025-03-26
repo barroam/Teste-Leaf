@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hôpital - Médecins et Prise de Rendez-vous</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        .doctor-card {
+            transition: transform 0.3s;
+        }
+        .doctor-card:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+
+<!-- Section Informations de l'hôpital -->
+<div class="container mt-4">
+    <h1 class="text-center">Hôpital Principal de Dakar</h1>
+    <p class="text-center">Adresse : Avenue Pasteur, Dakar - Téléphone : +221 33 889 50 50</p>
+</div>
+
+<!-- Sélection de spécialité -->
+<div class="container mt-4">
+    <h3>Choisissez une spécialité :</h3>
+    <select class="form-select" id="specialtyFilter">
+        <option value="all">Toutes les spécialités</option>
+        <option value="Gynécologue">Gynécologue</option>
+        <option value="Pédiatre">Pédiatre</option>
+        <option value="Cardiologue">Cardiologue</option>
+    </select>
+</div>
+
+<!-- Liste des Médecins -->
+<div class="container mt-4">
+    <div class="row" id="doctorList">
+        <!-- Cartes des médecins générées dynamiquement -->
+    </div>
+</div>
+
+<!-- Modal pour la prise de rendez-vous -->
+<div class="modal fade" id="appointmentModal" tabindex="-1" aria-labelledby="modalTitle" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Prendre Rendez-vous</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="appointmentForm">
+                    <input type="hidden" id="selectedDoctor">
+                    <div class="mb-3">
+                        <label class="form-label">Nom du patient :</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date :</label>
+                        <input type="date" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Heure :</label>
+                        <input type="time" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Confirmer le Rendez-vous</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Liste des médecins
+const doctors = [
+    { name: "Dr. Aïcha Ndiaye", specialty: "Gynécologue", image: "https://via.placeholder.com/150" },
+    { name: "Dr. Mamadou Diallo", specialty: "Pédiatre", image: "https://via.placeholder.com/150" },
+    { name: "Dr. Fatou Sow", specialty: "Cardiologue", image: "https://via.placeholder.com/150" },
+    { name: "Dr. Amadou Ba", specialty: "Gynécologue", image: "https://via.placeholder.com/150" },
+    { name: "Dr. Khadija Diop", specialty: "Pédiatre", image: "https://via.placeholder.com/150" }
+];
+
+// Génération des cartes de médecins
+const doctorList = document.getElementById("doctorList");
+function displayDoctors(filter = "all") {
+    doctorList.innerHTML = "";
+    doctors.forEach(doc => {
+        if (filter === "all" || doc.specialty === filter) {
+            doctorList.innerHTML += `
+                <div class="col-md-4">
+                    <div class="card doctor-card shadow-sm">
+                        <img src="${doc.image}" class="card-img-top" alt="${doc.name}">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">${doc.name}</h5>
+                            <p class="card-text">${doc.specialty}</p>
+                            <button class="btn btn-success" onclick="openAppointmentModal('${doc.name}')">Prendre RDV</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+}
+
+// Filtrer les médecins selon la spécialité
+document.getElementById("specialtyFilter").addEventListener("change", function() {
+    displayDoctors(this.value);
+});
+
+// Ouvrir le modal de prise de rendez-vous
+function openAppointmentModal(doctorName) {
+    document.getElementById("selectedDoctor").value = doctorName;
+    document.getElementById("modalTitle").textContent = `Prendre Rendez-vous avec ${doctorName}`;
+    new bootstrap.Modal(document.getElementById("appointmentModal")).show();
+}
+
+// Initialiser l'affichage
+displayDoctors();
+</script>
+
+</body>
+</html>

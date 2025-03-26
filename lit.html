@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des Lits</title>
+  <link rel="stylesheet" href="lit.css">
+</head>
+<body>
+  <div class="dashboard">
+    <h1>Tableau de Bord - Gestion des Lits</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Service</th>
+          <th>Total de Lits</th>
+          <th>Lits Disponibles</th>
+          <th>Lits Occupés</th>
+        </tr>
+      </thead>
+      <tbody id="services-table">
+        <!-- Les données seront injectées ici via JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <div id="map-container">
+    <h2>Carte Interactive des Chambres</h2>
+    <div id="room-map"></div>
+  </div>
+
+  <script src="lit.js"></script>
+
+  <form action="ajout_lit.php" method="POST">
+    <label for="numero_lit">Numéro du lit :</label>
+    <input type="text" id="numero_lit" name="numero_lit" required>
+
+    <label for="service_id">Service :</label>
+    <select id="service_id" name="service_id" required>
+        <option value="">-- Sélectionner un service --</option>
+        <option value="1">Chirurgie</option>
+        <option value="2">Réanimation</option>
+        <option value="3">Médecine Générale</option>
+        <option value="4">Pédiatrie</option>
+    </select>
+
+    <label for="etat">État du lit :</label>
+    <select id="etat" name="etat" required>
+        <option value="disponible">Disponible</option>
+        <option value="occupé">Occupé</option>
+        <option value="réservé">Réservé</option>
+        <option value="en nettoyage">En nettoyage</option>
+    </select>
+
+    <label for="capteur_id">Capteur associé :</label>
+    <select id="capteur_id" name="capteur_id">
+        <option value="">-- Aucun capteur --</option>
+        <option value="1">Capteur de pression</option>
+        <option value="2">Capteur infrarouge</option>
+        <option value="3">Capteur RFID</option>
+        <option value="4">Capteur de poids</option>
+    </select>
+
+    <button type="submit">Ajouter le lit</button>
+</form>
+
+</body>
+</html>
+

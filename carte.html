@@ -31,9 +31,7 @@
         <input type="number" id="longitude" step="any" placeholder="Entrez la longitude" required>
         <button onclick="localiserAvecCoordonnees()">Localiser</button>
     </div>
-
-    <div id="map"></div>
-
+   
     <!-- Script Leaflet -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
@@ -42,7 +40,7 @@
 
         // Ajout des tuiles OpenStreetMap
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; <a href="https://www.C.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
         // Marqueur par défaut sur Dakar

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte OpenStreetMap avec itinéraire</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+</head>
+<body>
+    <div id="map" style="height: 500px;"></div>
+    <p id="distance" style="font-size: 18px; font-weight: bold;"></p>
+
+    <script>
+        // Coordonnées des deux personnes
+        let person1 = { lat: 14.6928, lng: -17.4467 }; // Dakar
+        let person2 = { lat: 14.7645, lng: -17.3663 }; // Pikine
+
+        // Initialisation de la carte
+        let map = L.map('map').setView([14.7, -17.4], 12);
+
+        // Ajout des tuiles OpenStreetMap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Ajouter les marqueurs pour les deux personnes
+        let marker1 = L.marker([person1.lat, person1.lng]).addTo(map)
+            .bindPopup("Personne 1");
+        let marker2 = L.marker([person2.lat, person2.lng]).addTo(map)
+            .bindPopup("Personne 2");
+
+        // Clé API OpenRouteService
+        let apiKey = "5b3ce3597851110001cf62488fbf3e0033fe4bb7aa735f2a7240b0a5"; // Remplace avec ta clé API OpenRouteService
+
+        async function getRoute() {
+            // URL avec la méthode correcte
+            let routeUrl = `https://api.openrouteservice.org/v2/directions/driving-car?api_key=${apiKey}&start=${person1.lng},${person1.lat}&end=${person2.lng},${person2.lat}`;
+
+            try {
+                let response = await fetch(routeUrl);
+                let data = await response.json();
+
+                if (data.routes) {
+                    let coordinates = data.routes[0].geometry.coordinates;
+                    let routeCoords = coordinates.map(coord => [coord[1], coord[0]]);
+
+                    // Tracer la ligne en rouge
+                    L.polyline(routeCoords, { color: 'red', weight: 4 }).addTo(map);
+
+                    // Afficher la distance
+                    let distance = data.routes[0].summary.distance / 1000; // Convertir en km
+                    document.getElementById("distance").innerText = `Distance : ${distance.toFixed(2)} km`;
+                }
+            } catch (error) {
+                console.error("Erreur lors de la récupération de l'itinéraire :", error);
+            }
+        }
+
+        // Appel de la fonction pour récupérer et afficher l'itinéraire
+        getRoute();
+    </script>
+</body>
+</html>
